@@ -95,7 +95,7 @@ class Peer:
                 chunk = s.recv(1024)
                 chunks.append(chunk)
 
-        with open(f"downloaded_{filename}", 'wb') as f:
+        with open(f"./data/downloaded_{filename}", 'wb') as f:
             for chunk in chunks:
                 f.write(chunk)
 
