@@ -1,5 +1,6 @@
-import socket
+import argparse
 import threading
+import socket
 import json
 import time
 
@@ -94,13 +95,37 @@ class Peer:
                 chunk = s.recv(1024)
                 chunks.append(chunk)
 
-        with open(f"./data/downloaded_{filename}", 'wb') as f:
+        with open(f"downloaded_{filename}", 'wb') as f:
             for chunk in chunks:
                 f.write(chunk)
 
 
-if __name__ == "__main__":
-    peer = Peer(peer_id='peer1')
+def main():
+    parser = argparse.ArgumentParser(description="P2P File Sharing")
+    parser.add_argument("peer_id", type=str, help="The ID of the peer")
+    parser.add_argument("--tracker_ip", type=str, default="127.0.0.1", help="Tracker IP address")
+    parser.add_argument("--tracker_port", type=int, default=6771, help="Tracker port")
+    parser.add_argument("--listen_port", type=int, default=52611, help="Listening port for this peer")
+
+    args = parser.parse_args()
+
+    peer = Peer(peer_id=args.peer_id, tracker_ip=args.tracker_ip, tracker_port=args.tracker_port, listen_port=args.listen_port)
     peer.start()
-    peer.share('./data/testfile.txt')
-    peer.get('testfile.txt')
+
+    while True:
+        command = input("Enter command (share <filename> / get <filename> / exit): ").strip().split()
+        if not command:
+            continue
+        if command[0] == "share" and len(command) == 2:
+            peer.share(command[1])
+        elif command[0] == "get" and len(command) == 2:
+            peer.get(command[1])
+        elif command[0] == "exit":
+            print("Exiting...")
+            break
+        else:
+            print("Invalid command. Please use 'share <filename>', 'get <filename>', or 'exit'.")
+
+
+if __name__ == "__main__":
+    main()
