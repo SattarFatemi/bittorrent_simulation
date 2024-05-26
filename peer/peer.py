@@ -50,8 +50,13 @@ class Peer:
             s.sendto(message, (self.tracker_ip, self.tracker_port))
 
     def share(self, filename):
+        chunks = []
         with open(filename, 'rb') as f:
-            chunks = [f.read(1024) for _ in iter(lambda: f.read(1024), b'')]
+            while True:
+                chunk = f.read(1024)
+                if not chunk:
+                    break
+                chunks.append(chunk)
         with self.lock:
             self.files[filename.split('/')[-1]] = chunks
 
@@ -59,7 +64,8 @@ class Peer:
             'command': 'share',
             'filename': filename.split('/')[-1],
             'peer_id': self.peer_id,
-            'peer_address': f'127.0.0.1:{self.listen_port}'
+            'peer_address': f'127.0.0.1:{self.listen_port}',
+            'num_chunks': len(chunks),
         }).encode()
 
         with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as s:
@@ -76,18 +82,17 @@ class Peer:
         with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as s:
             s.sendto(message, (self.tracker_ip, self.tracker_port))
             data, _ = s.recvfrom(1024)
-            peers = json.loads(data.decode())
+            result = json.loads(data.decode())
 
         chunks = []
-        for peer in peers:
-            ip, port = peer.split(':')
-            port = int(port)
-            for chunk_id in range(len(self.files[filename])):
-                with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-                    s.connect((ip, port))
-                    s.send(f"{filename},{chunk_id}".encode())
-                    chunk = s.recv(1024)
-                    chunks.append(chunk)
+        for chunk_id in range(result['num_chunks']):
+            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+                ip, port = result['peers'][0].split(':') # todo select peer randomly
+
+                s.connect((ip, int(port)))
+                s.send(f"{filename},{chunk_id}".encode())
+                chunk = s.recv(1024)
+                chunks.append(chunk)
 
         with open(f"./data/downloaded_{filename}", 'wb') as f:
             for chunk in chunks:

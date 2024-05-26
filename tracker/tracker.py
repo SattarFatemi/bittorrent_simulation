@@ -9,6 +9,7 @@ class Tracker:
         self.ip = ip
         self.port = port
         self.files = {}  # {filename: {peer_id: peer_address}}
+        self.chunks_data = {}  # {filename: int}
         self.lock = threading.Lock()
         self.peers = {}
 
@@ -40,31 +41,44 @@ class Tracker:
         filename = message.get('filename')
         peer_id = message.get('peer_id')
         peer_address = message.get('peer_address')
+        num_chunks = message.get('num_chunks')
 
         if command == 'share':
+            print(f"{peer_id} sharing {filename} at {peer_address}")
             with self.lock:
                 if filename not in self.files:
                     self.files[filename] = {}
+                    self.chunks_data[filename] = 0
                 self.files[filename][peer_id] = peer_address
-            print(f"{peer_id} sharing {filename} at {peer_address}")
+                self.chunks_data[filename] = num_chunks
+            print(f"{peer_id} shared {filename} at {peer_address}")
             s.sendto(b'OK', addr)
 
         elif command == 'get':
+            print(f"{peer_id} getting {filename}")
+
             self.gc()
 
             with self.lock:
                 if filename in self.files:
                     peers = list(self.files[filename].values())
-                    response = json.dumps(peers)
+                    data = {
+                        'peers': peers,
+                        'num_chunks': self.chunks_data[filename],
+                    }
+                    response = json.dumps(data)
                     s.sendto(response.encode(), addr)
                 else:
                     s.sendto(b'File not found', addr)
+
+            print(f"{peer_id} got {filename}")
 
         elif command == 'alive':
             with self.lock:
                 if peer_id not in self.peers:
                     self.peers[peer_id] = 0
                 self.peers[peer_id] = time.time()
+                print(f"{peer_id} is alive")
 
 
 if __name__ == "__main__":
