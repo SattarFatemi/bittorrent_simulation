@@ -1,7 +1,7 @@
 import socket
 import threading
 import json
-import os
+import time
 
 
 class Peer:
@@ -15,6 +15,7 @@ class Peer:
 
     def start(self):
         threading.Thread(target=self.listen).start()
+        threading.Thread(target=self.send_alive).start()
 
     def listen(self):
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
@@ -33,6 +34,20 @@ class Peer:
             chunk = self.files[filename][chunk_id]
         conn.send(chunk)
         conn.close()
+
+    def send_alive(self):
+        while True:
+            self.alive()
+            time.sleep(5)
+
+    def alive(self):
+        message = json.dumps({
+            'command': 'alive',
+            'peer_id': self.peer_id,
+        }).encode()
+
+        with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as s:
+            s.sendto(message, (self.tracker_ip, self.tracker_port))
 
     def share(self, filename):
         with open(filename, 'rb') as f:
