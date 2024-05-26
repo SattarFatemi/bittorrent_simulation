@@ -38,11 +38,11 @@ class Peer:
         with open(filename, 'rb') as f:
             chunks = [f.read(1024) for _ in iter(lambda: f.read(1024), b'')]
         with self.lock:
-            self.files[filename] = chunks
+            self.files[filename.split('/')[-1]] = chunks
 
         message = json.dumps({
             'command': 'share',
-            'filename': filename,
+            'filename': filename.split('/')[-1],
             'peer_id': self.peer_id,
             'peer_address': f'127.0.0.1:{self.listen_port}'
         }).encode()
@@ -74,7 +74,7 @@ class Peer:
                     chunk = s.recv(1024)
                     chunks.append(chunk)
 
-        with open(f"downloaded_{filename}", 'wb') as f:
+        with open(f"./data/downloaded_{filename}", 'wb') as f:
             for chunk in chunks:
                 f.write(chunk)
 
@@ -82,5 +82,5 @@ class Peer:
 if __name__ == "__main__":
     peer = Peer(peer_id='peer1')
     peer.start()
-    peer.share('testfile.txt')
+    peer.share('./data/testfile.txt')
     peer.get('testfile.txt')
