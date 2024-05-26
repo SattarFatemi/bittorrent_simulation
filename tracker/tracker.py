@@ -2,6 +2,7 @@ import socket
 import threading
 import json
 
+
 class Tracker:
     def __init__(self, ip='127.0.0.1', port=6771):
         self.ip = ip
@@ -40,6 +41,7 @@ class Tracker:
                     s.sendto(response.encode(), addr)
                 else:
                     s.sendto(b'File not found', addr)
+
 
 if __name__ == "__main__":
     tracker = Tracker()
