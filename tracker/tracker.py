@@ -35,7 +35,6 @@ class Tracker:
                 threading.Thread(target=self.handle_request, args=(data, addr, s)).start()
 
     def handle_request(self, data, addr, s):
-
         message = json.loads(data.decode())
         command = message['command']
         filename = message.get('filename')

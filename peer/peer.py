@@ -53,12 +53,19 @@ class Peer:
 
     def share(self, filename):
         chunks = []
-        with open(filename, 'rb') as f:
-            while True:
-                chunk = f.read(1024)
-                if not chunk:
-                    break
-                chunks.append(chunk)
+        try:
+            with open(f"data/{filename}", 'rb') as f:
+                while True:
+                    chunk = f.read(1024)
+                    if not chunk:
+                        break
+                    chunks.append(chunk)
+        except FileNotFoundError:
+            print(f"Error: The file '{filename}' was not found in the 'data' directory.")
+            return
+        except Exception as e:
+            print(f"An unexpected error occurred: {e}")
+            return
         with self.lock:
             self.files[filename.split('/')[-1]] = chunks
 
@@ -74,6 +81,10 @@ class Peer:
             s.sendto(message, (self.tracker_ip, self.tracker_port))
 
     def get(self, filename):
+        if self.files.get(filename.split('/')[-1], None) != None:
+            print("You already have the file with the same name!")
+            return
+        
         message = json.dumps({
             'command': 'get',
             'filename': filename,
@@ -100,6 +111,8 @@ class Peer:
             for chunk in chunks:
                 f.write(chunk)
 
+        self.share(filename)
+
 
 def main():
     parser = argparse.ArgumentParser(description="P2P File Sharing")
@@ -110,6 +123,8 @@ def main():
 
     args = parser.parse_args()
 
+    if args.listen_port == 52611:
+        args.listen_port = 52611 + int(args.peer_id)
     peer = Peer(peer_id=args.peer_id, tracker_ip=args.tracker_ip, tracker_port=args.tracker_port, listen_port=args.listen_port)
     peer.start()
 
