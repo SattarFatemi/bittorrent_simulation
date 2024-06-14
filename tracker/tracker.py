@@ -25,6 +25,11 @@ class Tracker:
         for peer in self.peers:
             if self.peers[peer] < time.time() - 30:
                 self.clean(peer)
+                self.logs.append({
+                    'command': 'exit',
+                    'peer_id': peer.peer_id,
+                    'timestamp': time.time(),
+                })
 
     def start(self):
         with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as s:
@@ -96,6 +101,15 @@ class Tracker:
                 self.peers[peer_id] = time.time()
                 self.logs.append({
                     'command': 'alive',
+                    'peer_id': peer_id,
+                    'timestamp': time.time(),
+                })
+            
+        elif command == 'exit':
+            with self.lock:
+                self.clean(peer_id)
+                self.logs.append({
+                    'command': 'exit',
                     'peer_id': peer_id,
                     'timestamp': time.time(),
                 })

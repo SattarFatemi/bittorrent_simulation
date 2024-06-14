@@ -126,6 +126,16 @@ class Peer:
     def show_logs(self):
         for log in self.logs:
             print(log)
+            
+    def exit(self):
+        message = json.dumps({
+            'command': 'exit',
+            'peer_id': self.peer_id,
+        }).encode()
+
+        with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as s:
+            s.sendto(message, (self.tracker_ip, self.tracker_port))
+        print(f"Peer {self.peer_id} exiting...")
 
 def main():
     parser = argparse.ArgumentParser(description="P2P File Sharing")
@@ -152,7 +162,7 @@ def main():
         elif command[0] == "logs" and command[1] == "request":
             peer.show_logs()
         elif command[0] == "exit":
-            print("Exiting...")
+            peer.exit()
             break
         else:
             print("Invalid command. Please use 'share <filename>', 'get <filename>', 'logs request', or 'exit'.")
