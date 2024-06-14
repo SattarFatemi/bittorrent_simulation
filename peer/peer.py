@@ -5,7 +5,6 @@ import json
 import time
 import random
 
-
 class Peer:
     def __init__(self, peer_id, tracker_ip='127.0.0.1', tracker_port=6771, listen_port=52611):
         self.peer_id = peer_id
@@ -14,6 +13,7 @@ class Peer:
         self.listen_port = listen_port
         self.files = {}
         self.lock = threading.Lock()
+        self.logs = []
 
     def start(self):
         threading.Thread(target=self.listen).start()
@@ -106,6 +106,13 @@ class Peer:
                 s.send(f"{filename},{chunk_id}".encode())
                 chunk = s.recv(1024)
                 chunks.append(chunk)
+                self.logs.append({
+                    'filename': filename,
+                    'chunk_id': chunk_id,
+                    'peer_address': f"{ip}:{port}",
+                    'timestamp': time.time(),
+                    'status': 'success' if chunk else 'failure'
+                })
 
         with open(f"./data/downloaded_{filename}", 'wb') as f:
             for chunk in chunks:
@@ -113,6 +120,9 @@ class Peer:
 
         self.share(filename)
 
+    def show_logs(self):
+        for log in self.logs:
+            print(log)
 
 def main():
     parser = argparse.ArgumentParser(description="P2P File Sharing")
@@ -129,19 +139,20 @@ def main():
     peer.start()
 
     while True:
-        command = input("Enter command (share <filename> / get <filename> / exit): ").strip().split()
+        command = input("Enter command (share <filename> / get <filename> / logs request / exit): ").strip().split()
         if not command:
             continue
         if command[0] == "share" and len(command) == 2:
             peer.share(command[1])
         elif command[0] == "get" and len(command) == 2:
             peer.get(command[1])
+        elif command[0] == "logs" and command[1] == "request":
+            peer.show_logs()
         elif command[0] == "exit":
             print("Exiting...")
             break
         else:
-            print("Invalid command. Please use 'share <filename>', 'get <filename>', or 'exit'.")
-
+            print("Invalid command. Please use 'share <filename>', 'get <filename>', 'logs request', or 'exit'.")
 
 if __name__ == "__main__":
     main()
