@@ -3,6 +3,7 @@ import threading
 import socket
 import json
 import time
+import random
 
 
 class Peer:
@@ -88,7 +89,7 @@ class Peer:
         chunks = []
         for chunk_id in range(result['num_chunks']):
             with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-                ip, port = result['peers'][0].split(':') # todo select peer randomly
+                ip, port = random.choice(result['peers']).split(':')
 
                 s.connect((ip, int(port)))
                 s.send(f"{filename},{chunk_id}".encode())
