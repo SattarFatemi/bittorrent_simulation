@@ -163,9 +163,9 @@ def main():
             peer.show_logs()
         elif command[0] == "exit":
             peer.exit()
-            break
+            quit()
         else:
             print("Invalid command. Please use 'share <filename>', 'get <filename>', 'logs request', or 'exit'.")
-
+    
 if __name__ == "__main__":
     main()
