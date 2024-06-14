@@ -95,6 +95,9 @@ class Peer:
         with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as s:
             s.sendto(message, (self.tracker_ip, self.tracker_port))
             data, _ = s.recvfrom(1024)
+            if data == b"File not found":
+                print("This file has not shared yet!")
+                return
             result = json.loads(data.decode())
 
         chunks = []
