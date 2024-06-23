@@ -145,8 +145,8 @@ def main():
             tracker.show_request_logs()
         elif command[0] == "logs-all":
             tracker.show_all_logs()
-        elif command[0] == "logs_file" and len(command) == 3:
-            tracker.show_file_logs(command[2])
+        elif command[0] == "logs_file" and len(command) == 2:
+            tracker.show_file_logs(command[1])
         elif command[0] == "exit":
             print("Exiting...")
             break
