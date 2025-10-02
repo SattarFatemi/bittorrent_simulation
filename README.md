@@ -53,6 +53,7 @@ Run the tracker script. By default, it listens on `127.0.0.1:6771`.
 
 ```bash
 python tracker.py
+```
 
 **Available Tracker Commands:**
 
