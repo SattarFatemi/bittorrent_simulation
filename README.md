@@ -1,4 +1,3 @@
-````markdown
 # P2P File Sharing System (with Tracker)
 
 This project implements a simple **peer-to-peer (P2P) file sharing system** with a centralized **tracker** for coordination. Peers can share files, download files from others, and the tracker maintains metadata about which peers own which files.
@@ -54,7 +53,6 @@ Run the tracker script. By default, it listens on `127.0.0.1:6771`.
 
 ```bash
 python tracker.py
-````
 
 **Available Tracker Commands:**
 
